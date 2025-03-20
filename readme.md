@@ -1,98 +1,45 @@
-# Google Play
+# googleplay_dl
+Google Play Apk 下载器
 
-> I’m not really sure what the point of this video is, but I guess just be
-> generous. be kind to people, because you never know how much they might need
-> it, or how far it’ll go.
->
-> [NakeyJakey](//youtube.com/watch?v=Cr0UYNKmrUs) (2018)
+## 用法
 
-download APK from Google Play or send API requests
+1. 打开地址 [Google账户登录](https://accounts.google.com/embedded/setup/v2/android) 登录账户, 登录到最后一步
 
-## tool examples
+2. 在浏览器中打开开发者工具，切换到 应用程序 -> 存储 -> Cookies, 找到 `oauth_token`
 
-[sign in](//accounts.google.com/embedded/setup/v2/android) with your Google
-Account. then get authorization code (`oauth_token`) cookie from
-[browser&nbsp;storage][1]. should be valid for 10 minutes. then exchange
-authorization code for refresh token (`aas_et`):
+3. 下载 apk
+```bash
+cd bin
 
-~~~
-play -token oauth2_4/0Adeu5B...
-~~~
+# 登录
+# 登录信息, 在 token 路径
+./googleplay_dl -abi arm64-v8a -login oauth2_4/0Adeu5B...
 
-[1]://firefox-source-docs.mozilla.org/devtools-user/storage_inspector
+# 下载
+# 可多次下载, 在 apks 路径
+./googleplay_dl -abi arm64-v8a -dl com.google.android.gm
+```
 
-do `/checkin` request:
+- 一些常见的包名
+```
+# MicroAuth:    com.azure.authenticator
+# MicroEdge:    com.microsoft.emmx
+# Gmail    :    com.google.android.gm
+# X        :    com.twitter.android
+# Telegram :    org.telegram.messenger
+# GoogleMap:    com.google.android.apps.maps
+# Github   :    com.github.android
+# Notion   :    notion.id
+# Chrome   :    com.android.chrome
+# Bitwarden:    com.x8bit.bitwarden
+# QQ       :    com.tencent.mobileqq
+```
 
-~~~
-play -checkin
-~~~
+4. 安装
+```bash
+# 单 apk 文件
+adb install apks/com.microsoft.emmx-312406805.apk
 
-do `/fdfe/sync` request:
-
-~~~
-play -sync
-~~~
-
-get app details:
-
-~~~
-> play -i com.google.android.youtube
-details[8] = 0 USD
-details[13][1][4] = 19.40.35
-details[13][1][16] = Oct 7, 2024
-details[13][1][17] = APK APK APK APK
-details[13][1][82][1][1] = 8.0 and up
-details[15][18] = http://www.google.com/policies/privacy
-downloads = 17.34 billion
-name = YouTube
-size = 122.17 megabyte
-version code = 1548869056
-~~~
-
-acquire app. only needs to be done once per Google account:
-
-~~~
-play -i com.google.android.youtube -a
-~~~
-
-download APK. you need to specify any valid version code. the latest code is
-provided by the previous details command. if APK is split, all pieces will be
-downloaded:
-
-~~~
-play -i com.google.android.youtube -v 1548869056
-~~~
-
-## money
-
-up to Android 4.4 (2013), the login is protected with TLS fingerprinting, which
-is difficult but possible to bypass. since Android 5 (2014), Google uses
-bot-guard via JavaScript to protect the login. If you know about this contact
-me
-
----------------------------------------------------------------------------------
-
-software is not licensed for commercial use. if you wish to purchase a
-commercial license, contact me
-
----------------------------------------------------------------------------------
-
-as of november 5 2023, I no longer offer free discussion of this software. if
-you are interested in paid support, contact me
-
-<dl>
-   <dt>email</dt>
-      <dd>367@tuta.io</dd>
-   <dt>Discord username</dt>
-      <dd>10308</dd>
-   <dt>Discord invite</dt>
-      <dd>https://discord.com/invite/rMFzDRQhSx</dd>
-   <dt>PayPal</dt>
-      <dd>https://paypal.com/donate?hosted_button_id=UEJBQQTU3VYDY</dd>
-</dl>
-
-## goals
-
-1. [Pixel 6](//wikipedia.org/wiki/Pixel_6) (2021)
-2. [Android 12](//wikipedia.org/wiki/Android_12) (2021)
-3. [Google Play](//wikipedia.org/wiki/Google_Play) 29 (2022)
+# Split apk 文件
+adb install-multiple apks/com.android.chrome-699809533.apk apks/com.android.chrome-chrome-699809533.apk apks/com.android.chrome-config.zh-699809533.apk apks/com.android.chrome-google3-699809533.apk
+```

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"41.neocities.org/google/play"
-	"41.neocities.org/x/progress"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"41.neocities.org/google/play"
+	"41.neocities.org/x/progress"
 )
 
 func (f *flags) do_delivery() error {
@@ -23,7 +23,7 @@ func (f *flags) do_delivery() error {
 		return err
 	}
 	for obb := range deliver.Obb() {
-		err := download(
+		err := f.download(
 			obb.Url(), f.app.Obb(obb.Field1()),
 		)
 		if err != nil {
@@ -31,14 +31,14 @@ func (f *flags) do_delivery() error {
 		}
 	}
 	for apk := range deliver.Apk() {
-		err := download(
+		err := f.download(
 			apk.Url(), f.app.Apk(apk.Field1()),
 		)
 		if err != nil {
 			return err
 		}
 	}
-	err = download(deliver.Url(), f.app.Apk(""))
+	err = f.download(deliver.Url(), f.app.Apk(""))
 	if err != nil {
 		return err
 	}
@@ -56,8 +56,7 @@ func (f *flags) do_acquire() error {
 
 func (f *flags) device_path() string {
 	var b strings.Builder
-	b.WriteString(f.home)
-	b.WriteByte('/')
+	b.WriteString(f.home + "token/")
 	b.WriteString(play.DefaultDevice.Abi)
 	if f.leanback {
 		b.WriteString("-leanback")
@@ -66,7 +65,7 @@ func (f *flags) device_path() string {
 }
 
 func (f *flags) client(checkin *play.Checkin) (*play.Auth, error) {
-	data, err := os.ReadFile(f.home + "/Token")
+	data, err := os.ReadFile(f.home + "token/Token")
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +102,7 @@ func (f *flags) New() error {
 	if err != nil {
 		return err
 	}
-	f.home = filepath.ToSlash(f.home) + "/google/play"
+	f.home = "./"
 	return nil
 }
 
@@ -116,6 +115,9 @@ type flags struct {
 	single   bool
 	sync     bool
 	token    string
+
+	login string
+	dl    string
 }
 
 func main() {
@@ -130,7 +132,7 @@ func main() {
 	flag.StringVar(
 		&play.DefaultDevice.Abi,
 		"abi",
-		play.Abis[0],
+		play.Abis[3],
 		strings.Join(play.Abis[1:], " "),
 	)
 	flag.BoolVar(&f.checkin, "checkin", false, "checkin request")
@@ -142,7 +144,10 @@ func main() {
 		&f.token, "token", "", "accounts.google.com/embedded/setup/v2/android",
 	)
 	flag.Uint64Var(&f.app.Version, "v", 0, "version code")
+	flag.StringVar(&f.login, "login", "", "https://accounts.google.com/embedded/setup/v2/android\ne.g. oauth2_4/0Adeu5B...")
+	flag.StringVar(&f.dl, "dl", "", "apk id\ne.g. notion.id")
 	flag.Parse()
+
 	switch {
 	case f.app.Id != "":
 		switch {
@@ -178,6 +183,40 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+	case f.login != "":
+		f.token = f.login
+		err := f.do_auth()
+		if err != nil {
+			panic(err)
+		}
+		err = f.do_checkin()
+		if err != nil {
+			panic(err)
+		}
+		err = f.do_sync()
+		if err != nil {
+			panic(err)
+		}
+	case f.dl != "":
+		f.app.Id = f.dl
+		details, err := f.do_details()
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(details)
+
+		f.app.Version = details.Version_code()
+
+		err = f.do_acquire()
+		if err != nil {
+			panic(err)
+		}
+
+		err = f.do_delivery()
+		if err != nil {
+			panic(err)
+		}
+
 	default:
 		flag.Usage()
 	}
@@ -202,7 +241,7 @@ func (f *flags) do_auth() error {
 	if err != nil {
 		return err
 	}
-	return f.write_file(f.home+"/Token", data)
+	return f.write_file(f.home+"token/Token", data)
 }
 
 func (f *flags) do_checkin() error {
@@ -236,8 +275,8 @@ func (f *flags) do_sync() error {
 	return play.DefaultDevice.Sync(checkin)
 }
 
-func download(address, name string) error {
-	file, err := os.Create(name)
+func (f *flags) download(address, name string) error {
+	file, err := os.Create(f.home + "apks/" + name)
 	if err != nil {
 		return err
 	}

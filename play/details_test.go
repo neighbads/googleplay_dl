@@ -85,7 +85,7 @@ func TestDetails(t *testing.T) {
 		if detail.size() == 0 {
 			t.Fatal("size")
 		}
-		if detail.version_code() == 0 {
+		if detail.Version_code() == 0 {
 			t.Fatal("version code")
 		}
 		fmt.Printf("%#v,\n", app1)

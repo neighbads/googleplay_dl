@@ -1,14 +1,15 @@
 package play
 
 import (
-	"41.neocities.org/protobuf"
-	"41.neocities.org/x/stringer"
 	"errors"
 	"fmt"
 	"io"
 	"iter"
 	"net/http"
 	"strings"
+
+	"41.neocities.org/protobuf"
+	"41.neocities.org/x/stringer"
 )
 
 func (d Details) field_13_1_17() iter.Seq[uint64] {
@@ -50,7 +51,7 @@ func (d Details) String() string {
 	b = fmt.Appendln(
 		b, "size =", stringer.Size(d.size()),
 	)
-	b = fmt.Append(b, "version code = ", d.version_code())
+	b = fmt.Append(b, "version code = ", d.Version_code())
 	return string(b)
 }
 func (a Auth) Details(check Checkin, doc string, single bool) (*Details, error) {
@@ -170,7 +171,7 @@ func (d Details) size() uint64 {
 	return 0
 }
 
-func (d Details) version_code() uint64 {
+func (d Details) Version_code() uint64 {
 	for data := range d[0].Get(13) {
 		for data := range data.Get(1) {
 			for data := range data.GetVarint(3) {
